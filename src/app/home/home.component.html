@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Landing Page</title>
+  <link rel="stylesheet" href="home.component.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <div class="navbar">
+        <div class="logo">
+          <!-- Your logo image here -->
+        </div>
+        <ul class="nav-links">
+          <li><a href="#how-it-works">How it works</a></li>
+          <li><a href="#login">Login</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Subscribe to our mailing Lish</h1>
+      <p>Get a new recipe every day based on your preferences</p>
+      <button class="subscribe-btn" (click)="redirectToLogin()">Subscribe</button>
+    </div>
+  </section>
+
+  <section id="how-it-works" class="how-it-works">
+    <h2>How It Works</h2>
+    <div class="cards">
+      <div class="card">
+        <img src="image1.jpg" alt="Image 1">
+        <h3>Title 1</h3>
+        <p>Subtitle 1</p>
+      </div>
+      <div class="card">
+        <img src="image2.jpg" alt="Image 2">
+        <h3>Title 2</h3>
+        <p>Subtitle 2</p>
+      </div>
+      <div class="card">
+        <img src="image3.jpg" alt="Image 3">
+        <h3>Title 3</h3>
+        <p>Subtitle 3</p>
+      </div>
+      <div class="card">
+        <img src="image4.jpg" alt="Image 4">
+        <h3>Title 4</h3>
+        <p>Subtitle 4</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="customer-reviews">
+    <h2>Customer Reviews</h2>
+    <div class="slider">
+      <!-- Add your customer reviews with a slider here -->
+    </div>
+  </section>
+
+  <footer>
+    <!-- Footer content here -->
+  </footer>
+</body>
+
+</html>
