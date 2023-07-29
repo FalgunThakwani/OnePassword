@@ -273,9 +273,7 @@ Resources:
       SecretString: !Sub
       SecretString: !Join
         - ""
-        - - "{\"apiGateway\": \""
-          - !Ref TestAPI
-          - "\"}"
+        - !Ref TestAPI
   PasswordsUserPool:
     Type: "AWS::Cognito::UserPool"
     Properties:
@@ -313,3 +311,64 @@ Resources:
       UserPoolId: !Ref PasswordsUserPool
     DependsOn:
       - PasswordsUserPoolClient
+  MySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: PasswordsUserPoolID
+      Description: user pool id
+      SecretString: !Sub
+      SecretString: !Join
+        - ""
+        - !Ref PasswordsUserPool
+  MySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: PasswordsUserPoolClientID
+      Description: user pool id
+      SecretString: !Sub
+      SecretString: !Join
+        - ""
+        - !Ref PasswordsUserPoolClient
+  Server:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.large
+      ImageId: ami-0f34c5ae932e6f0e4
+      KeyName: "cloud-vpc"
+      SecurityGroups:
+      - Ref: InstanceSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo yum update -y
+          sudo yum install -y git
+          sudo amazon-linux-extras install -y nodejs
+          git clone https://github.com/FalgunThakwani/OnePassword.git
+          cd OnePassword
+          npm install
+          npm start
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH HTTP and HTTPS access via port 22,80,443,3000,3389
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          CidrIp: 0.0.0.0/0

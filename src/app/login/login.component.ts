@@ -3,8 +3,7 @@ import { Router } from '@angular/router';
 import { Auth } from 'aws-amplify';
 import { IUser, CognitoService } from '../cognito.service';
 import { HttpClient } from '@angular/common/http';
-import * as fs from 'fs';
-
+import { AwsSecretsService } from '../aws-secrets-manager';
 @Component({
   selector: 'app-sign-in',
   templateUrl: './login.component.html',
@@ -20,17 +19,16 @@ export class LoginComponent {
   user: IUser;
   successMessage: string = '';
   jsonData :any = [];
-  api_gateway = '';
+  api_gateway :any = '';
+  secretValue: any = '';
   constructor(private router: Router,
-              private cognitoService: CognitoService,private http: HttpClient) {
+              private cognitoService: CognitoService,private http: HttpClient, private awsSecretsService: AwsSecretsService) {
     this.loading = false;
     this.user = {} as IUser;
-   
+    this.getSecret();
   }
   ngOnInit(){
     this.getApiGateway();
-     
-    
   }
 
   fetchData(){
@@ -76,6 +74,15 @@ export class LoginComponent {
         console.error('Error reading file:', error);
       }
     );
+  }
+  async getSecret(): Promise<void> {
+    try {
+      const secretName = 'PasswordsUserPoolID';
+      const secretResponse = await this.awsSecretsService.getSecretValue(secretName);
+      this.api_gateway = secretResponse.SecretString;
+    } catch (error) {
+      console.error('Error fetching secret:', error);
+    }
   }
 
 
