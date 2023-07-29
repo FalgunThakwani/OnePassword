@@ -270,10 +270,9 @@ Resources:
     Properties:
       Name: APIGateway
       Description: api gateway url
-      SecretString: !Sub
-      SecretString: !Join
-        - ""
-        - !Ref TestAPI
+      SecretString: !Ref TestAPI
+    DependsOn:
+      - TestAPI
   PasswordsUserPool:
     Type: "AWS::Cognito::UserPool"
     Properties:
@@ -311,24 +310,22 @@ Resources:
       UserPoolId: !Ref PasswordsUserPool
     DependsOn:
       - PasswordsUserPoolClient
-  MySecret:
+  MySecret1:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: PasswordsUserPoolID
       Description: user pool id
-      SecretString: !Sub
-      SecretString: !Join
-        - ""
-        - !Ref PasswordsUserPool
-  MySecret:
+      SecretString: !Ref PasswordsUserPool
+    DependsOn:
+      - PasswordsUserPool
+  MySecret2:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: PasswordsUserPoolClientID
       Description: user pool id
-      SecretString: !Sub
-      SecretString: !Join
-        - ""
-        - !Ref PasswordsUserPoolClient
+      SecretString: !Ref PasswordsUserPoolClient
+    DependsOn:
+      - PasswordsUserPool
   Server:
     Type: AWS::EC2::Instance
     Properties:
@@ -342,7 +339,11 @@ Resources:
           #!/bin/bash
           sudo yum update -y
           sudo yum install -y git
-          sudo amazon-linux-extras install -y nodejs
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          . ~/.nvm/nvm.sh
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install 16
           git clone https://github.com/FalgunThakwani/OnePassword.git
           cd OnePassword
           npm install
