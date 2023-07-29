@@ -28,7 +28,7 @@ export class LoginComponent {
     this.getSecret();
   }
   ngOnInit(){
-    this.getApiGateway();
+    this.fetchData();
   }
 
   fetchData(){
@@ -37,7 +37,7 @@ export class LoginComponent {
       .then((user) => {
         console.log(user);
         userEmail = user.attributes.email;
-        console.log(userEmail)
+        console.log(this.api_gateway)
         const apiUrl = 'https://'+this.api_gateway+'.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';
         console.log(apiUrl);
         const body = {
@@ -61,20 +61,6 @@ export class LoginComponent {
       });
     }
   
-    getApiGateway(){
-    const filePath = '../assets/api_gateway.txt'; // Replace with your file path
-    console.log('api_gateway')
-    this.http.get(filePath, { responseType: 'text' }).subscribe(
-      (response: string) => {
-        console.log(response)
-        this.api_gateway= response;
-        this.fetchData();
-      },
-      (error) => {
-        console.error('Error reading file:', error);
-      }
-    );
-  }
   async getSecret(): Promise<void> {
     try {
       const secretName = 'PasswordsUserPoolID';
