@@ -44,6 +44,6 @@ Resources:
           ToPort: 3000
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 5000
-          ToPort: 5000
+          FromPort: 4200
+          ToPort: 4200
           CidrIp: 0.0.0.0/0

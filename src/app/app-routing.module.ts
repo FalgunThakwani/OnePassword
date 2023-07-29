@@ -8,7 +8,7 @@ const routes: Routes = [
   { path: 'home', component: HomeComponent },
   { path: 'subscribe', component: SubscribeComponent },
   { path: 'login', component: LoginComponent },
-  { path: '', redirectTo: '/home', pathMatch: 'full' }, // Default route
+  { path: '', redirectTo: '/login', pathMatch: 'full' }, // Default route
 ];
 
 
