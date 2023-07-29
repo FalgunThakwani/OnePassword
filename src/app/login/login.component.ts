@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Auth } from 'aws-amplify';
 import { IUser, CognitoService } from '../cognito.service';
 import { HttpClient } from '@angular/common/http';
+import * as fs from 'fs';
 
 @Component({
   selector: 'app-sign-in',
@@ -19,19 +20,28 @@ export class LoginComponent {
   user: IUser;
   successMessage: string = '';
   jsonData :any = [];
-
+  api_gateway = '';
   constructor(private router: Router,
               private cognitoService: CognitoService,private http: HttpClient) {
     this.loading = false;
     this.user = {} as IUser;
+   
   }
   ngOnInit(){
+    this.getApiGateway();
+     
+    
+  }
+
+  fetchData(){
     let userEmail;
     Auth.currentAuthenticatedUser()
       .then((user) => {
         console.log(user);
         userEmail = user.attributes.email;
-        const apiUrl = 'https://dmzs517vpa.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';
+        console.log(userEmail)
+        const apiUrl = 'https://'+this.api_gateway+'.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';
+        console.log(apiUrl);
         const body = {
           email: userEmail,
           type: 'decrypt'
@@ -51,8 +61,23 @@ export class LoginComponent {
       .catch((err) => {
         console.error('Error getting authenticated user:', err);
       });
-  }
+    }
   
+    getApiGateway(){
+    const filePath = '../assets/api_gateway.txt'; // Replace with your file path
+    console.log('api_gateway')
+    this.http.get(filePath, { responseType: 'text' }).subscribe(
+      (response: string) => {
+        console.log(response)
+        this.api_gateway= response;
+        this.fetchData();
+      },
+      (error) => {
+        console.error('Error reading file:', error);
+      }
+    );
+  }
+
 
   submitForm() {
     let userEmail;
