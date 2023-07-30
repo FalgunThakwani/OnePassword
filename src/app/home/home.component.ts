@@ -44,16 +44,16 @@ ngOnInit(){
       .then((user) => {
         userEmail = user.attributes.email;
         console.log(api_gateway)
-        const apiUrl = 'https://'+api_gateway+'.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';
+        const apiUrl = 'https://'+api_gateway+'.execute-api.us-east-1.amazonaws.com/Production/score';
         console.log(apiUrl);
         const body = {
           email: userEmail,
           type: 'decrypt'
         };
         this.http.post(apiUrl, body).subscribe(
-          (response) => {
+          (response:any) => {
             console.log('API Response:', response);
-            this.jsonData = response; 
+            this.jsonData =JSON.parse(response.body); 
             // Add any further actions you want to perform after a successful API call.
           },
           (error) => {
@@ -91,7 +91,7 @@ ngOnInit(){
     .then((user) => {
       console.log(user)
        userEmail = user.attributes.email;
-       const apiUrl = 'https://'+this.api_gateway+'.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';
+       const apiUrl = 'https://'+this.api_gateway+'.execute-api.us-east-1.amazonaws.com/Production/score';
        const body = {
            email:userEmail,
            platform:this.formData.platform,
