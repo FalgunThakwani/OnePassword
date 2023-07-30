@@ -24,6 +24,7 @@ export class CognitoService {
 
   constructor(private http:HttpClient,private awsSecretsService: AwsSecretsService) {
     this.getSecret().then(()=>{
+      console.log(this.userPoolId);
       Amplify.configure({
         Auth: {
          userPoolId: this.userPoolId,
@@ -44,7 +45,7 @@ export class CognitoService {
         this.userPoolId = secretResponseUserPool.SecretString;
         const secretNameUserPoolClient = 'PasswordsUserPoolClientID';
         const secretResponseUserPoolClient = await this.awsSecretsService.getSecretValue(secretNameUserPoolClient);
-        this.userPoolId = secretResponseUserPoolClient.SecretString;
+        this.userPoolClientId = secretResponseUserPoolClient.SecretString;
       } catch (error) {
         console.error('Error fetching secret:', error);
       }
@@ -54,6 +55,9 @@ export class CognitoService {
     return Auth.signUp({
       username: user.email,
       password: user.password,
+      attributes: {
+        email: user.email
+    }
     });
   }
 

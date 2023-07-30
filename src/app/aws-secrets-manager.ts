@@ -12,9 +12,9 @@ export class AwsSecretsService {
     AWS.config.update({
         region: 'us-east-1',
         credentials: new AWS.Credentials({
-            accessKeyId: 'ASIARKW74NUEOK6F7D5K',
-            secretAccessKey: 'upSVFPPYwz4fiv5IUcwC9rzpVV4md62dqtw3ESgl',
-            sessionToken:'FwoGZXIvYXdzEA0aDFLNBLGSWMAZAr7AQCLAAQB8O9kgcR2f8+z2ItJWRgjggv8z/daLQEj3kRTitVO3coyc5IDqs9eIbaZi+88V6Tcv6f1JIxnp97TXu6QmhoFhq5Kjrc7MgjLHi6qoevAu0p8UhZOXH1QVxwnHPes6OQsZ5WJqhlY+tdnYWyKPlzNKL+J3Yr5F4QNM6givdOod0RQa3mXu6tis/sOv+xCkcvJmNiCRbeRZw4CP4rF8z4+wy6/Q9+JkXnxRTyzcldxUsT0WoeFM6yTwt2SI80D/WCip0pWmBjItAvfWpSxdCYhARSzIMPNarDqk5bE2jTpxb4svS6RcbWsPjPp+UgeWp76PIxfi'
+            accessKeyId: 'ASIARKW74NUEMSIYEWDY',
+            secretAccessKey: '4puN7x3JhJzY52TkAxChHDfVQRDvmoTDVnW1D7LL',
+            sessionToken:'FwoGZXIvYXdzEB4aDKOoBAPxrGmQ1oxxQyLAAaT9Nuar8bq4SuGTvGlItmo6JNUxjNM9g1pGNxY7ED3Qnd6eItr3wkdBQ8p6CIzWnu4cVehSYW1mftGgV/xMIlvoPd/hsZ6QPQvhyXBgih7tcTxw4n28JO/5Hd0XT4jdN9zvBgzpVZr7r/805sC7idb9JiujUfP2/UW2Nrd5HuelkEbMrzBEOX9JWf1pdW3OOBoE8H4G5EAcSJ6BZpAjoGjh3y33lKxJZPoxLl/ncjB0i2/U9udQn65e3YQFLpzMRCj7pZmmBjItwfm6AUBVXCcDmaZU3zxIC+nTegpqH0tjYLqTOZSF3trehsMVmNz0z1B6YmBI'
         }),
       });
       this.secretsManager = new AWS.SecretsManager();
