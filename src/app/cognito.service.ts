@@ -55,9 +55,6 @@ export class CognitoService {
     return Auth.signUp({
       username: user.email,
       password: user.password,
-      attributes: {
-        email: user.email
-    }
     });
   }
 

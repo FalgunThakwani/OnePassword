@@ -25,17 +25,19 @@ export class LoginComponent {
               private cognitoService: CognitoService,private http: HttpClient, private awsSecretsService: AwsSecretsService) {
     this.loading = false;
     this.user = {} as IUser;
-    this.getSecret();
+    // this.getSecret(); 
   }
   ngOnInit(){
-    this.fetchData();
+    Auth.currentAuthenticatedUser()
+    .then((user) => {
+      this.router.navigateByUrl('/home');
+    });
   }
 
   fetchData(){
     let userEmail;
     Auth.currentAuthenticatedUser()
       .then((user) => {
-        console.log(user);
         userEmail = user.attributes.email;
         console.log(this.api_gateway)
         const apiUrl = 'https://'+this.api_gateway+'.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';

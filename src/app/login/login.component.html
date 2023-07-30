@@ -4,7 +4,7 @@
       let-user="user"
       let-signOut="signOut"
     >
-    <form (ngSubmit)="submitForm()">
+    <!-- <form (ngSubmit)="submitForm()">
       <h1>Secure Your Credentials </h1>
       <p>{{successMessage}}</p>
       <div>
@@ -30,7 +30,7 @@
     <table>
   <thead>
     <tr>
-      <!-- <th>Email</th> -->
+      <th>Email</th>
       <th>Username</th>
       <th>Platform</th>
       <th>Password</th>
@@ -38,7 +38,6 @@
   </thead>
   <tbody>
     <tr *ngFor="let item of jsonData">
-      <!-- <td>{{ item.email }}</td> -->
       <td>{{ item.username }}</td>
       <td>{{ item.platform }}</td>
       <td>
@@ -47,7 +46,7 @@
       </td>
     </tr>
   </tbody>
-</table>
+</table> -->
 
     </ng-template>
   </amplify-authenticator>

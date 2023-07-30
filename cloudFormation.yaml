@@ -276,18 +276,20 @@ Resources:
   PasswordsUserPool:
     Type: "AWS::Cognito::UserPool"
     Properties:
+      UserPoolName: PasswordsUsers
       AutoVerifiedAttributes:
         - email
-      UserPoolName: PasswordsUsers
-      Schema:
-        - Name: email
-          AttributeDataType: String
-          Mutable: true
-          Required: true
       UsernameConfiguration:
         CaseSensitive: false
       VerificationMessageTemplate:
         DefaultEmailOption: CONFIRM_WITH_CODE
+      Schema:
+        - AttributeDataType: String
+          Mutable: true
+          Name: email
+          Required: true
+      UsernameAttributes:
+        - email
   PasswordsUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
