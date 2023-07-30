@@ -68,6 +68,7 @@ export class HomeComponent {
       const secretName = 'APIGateway';
       const secretResponse = await this.awsSecretsService.getSecretValue(secretName);
       const api_gateway = secretResponse.SecretString;
+      this.api_gateway=api_gateway;
       this.fetchData(api_gateway)
     } catch (error) {
       console.error('Error fetching secret:', error);
@@ -86,7 +87,7 @@ export class HomeComponent {
     .then((user) => {
       console.log(user)
        userEmail = user.attributes.email;
-       const apiUrl = 'https://dmzs517vpa.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';
+       const apiUrl = 'https://'+this.api_gateway+'.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';
        const body = {
            email:userEmail,
            platform:this.formData.platform,
