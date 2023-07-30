@@ -216,19 +216,22 @@ Resources:
       Integration:
         Type: MOCK
         IntegrationResponses:
-          - StatusCode: 200
             ResponseParameters:
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
               method.response.header.Access-Control-Allow-Methods: "'GET,PUT,POST,DELETE,OPTIONS'"
               method.response.header.Access-Control-Allow-Origin: "'*'"
             ResponseTemplates:
               application/json: ''
+            StatusCode: '200'
+          PassthroughBehaviour: NEVER
       MethodResponses:
-        - StatusCode: 200
+        - ResponseModels:
+            application/json: '{"statusCode": 200}'
           ResponseParameters:
             method.response.header.Access-Control-Allow-Headers: true
             method.response.header.Access-Control-Allow-Methods: true
             method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: '200'
   GetTestAPILambdaMethod:
     Type: "AWS::ApiGateway::Method"
     Properties:
