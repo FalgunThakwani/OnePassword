@@ -29,6 +29,10 @@ export class HomeComponent {
     this.user = {} as IUser;
     this.getSecret(); 
 }
+
+ngOnInit(){
+  this.getSecret();
+}
   redirectToLogin(): void {
     this.router.navigateByUrl('/login');
   }
