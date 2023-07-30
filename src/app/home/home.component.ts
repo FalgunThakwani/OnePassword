@@ -27,11 +27,10 @@ export class HomeComponent {
     private cognitoService: CognitoService,private http: HttpClient, private awsSecretsService: AwsSecretsService) {
     this.loading = false;
     this.user = {} as IUser;
-    this.getSecret(); 
 }
 
-ngOnInit(){
-  this.getSecret();
+  async ngOnInit(){
+  await this.getSecret();
 }
   redirectToLogin(): void {
     this.router.navigateByUrl('/login');
