@@ -223,10 +223,12 @@ Resources:
             ResponseTemplates:
               application/json: ''
             StatusCode: '200'
-          PassthroughBehaviour: NEVER
+        PassthroughBehaviour: NEVER
+        RequestTemplates:
+          application/json: '{"statusCode: 200"}'
       MethodResponses:
         - ResponseModels:
-            application/json: '{"statusCode": 200}'
+            application/json: ''
           ResponseParameters:
             method.response.header.Access-Control-Allow-Headers: true
             method.response.header.Access-Control-Allow-Methods: true
