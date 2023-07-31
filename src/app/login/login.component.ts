@@ -53,8 +53,6 @@ onVerify() {
   onLogin() {
     Auth.signIn(this.username, this.password)
       .then(() => {
-        // Login successful, redirect to the protected page or do any other actions
-        // For example, you can navigate to a different route:
         this.router.navigate(['/home']);
       })
       .catch((error) => {
