@@ -30,8 +30,10 @@ export class HomeComponent {
 }
 
   async ngOnInit(){
+    console.log("NgOnInit");
   await this.getSecret();
-}
+  }
+
   redirectToLogin(): void {
     this.router.navigateByUrl('/login');
   }
@@ -42,7 +44,7 @@ export class HomeComponent {
     Auth.currentAuthenticatedUser()
       .then((user) => {
         userEmail = user.attributes.email;
-        console.log(api_gateway)
+        console.log(userEmail);
         const apiUrl = 'https://'+api_gateway+'.execute-api.us-east-1.amazonaws.com/Production/score';
         console.log(apiUrl);
         const body = {
@@ -78,14 +80,18 @@ export class HomeComponent {
     }
   }
 
-  async signOut(){
-    const result = await this.cognitoService.signOut();
-    this.router.navigateByUrl('/login')
+  signOut(){
+    Auth.signOut()
+    .then(() => {
+      this.router.navigateByUrl('/login')
+    })
+    .catch((error) => {
+      console.error('Error signing out:', error);
+    });
   }
 
   submitForm() {
     let userEmail;
-    
     Auth.currentAuthenticatedUser()
     .then((user) => {
       console.log(user)
@@ -103,6 +109,7 @@ export class HomeComponent {
          (response) => {
            console.log('API Response:', response);
            this.successMessage="Your Credentials are secured!"
+           this.fetchData(this.api_gateway);
            // Add any further actions you want to perform after a successful API call.
          },
          (error) => {

@@ -1,114 +1,65 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { Auth } from 'aws-amplify';
-import { IUser, CognitoService } from '../cognito.service';
-import { HttpClient } from '@angular/common/http';
-import { AwsSecretsService } from '../aws-secrets-manager';
+import { IUser} from '../cognito.service';
 @Component({
   selector: 'app-sign-in',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
 })
 export class LoginComponent {
-  formData = {
-    platform: '',
-    username: '',
-    password: ''
-  };
-  loading: boolean;
+
   user: IUser;
-  successMessage: string = '';
-  jsonData :any = [];
-  api_gateway :any = '';
-  secretValue: any = '';
-  constructor(private router: Router,
-              private cognitoService: CognitoService,private http: HttpClient, private awsSecretsService: AwsSecretsService) {
-    this.loading = false;
+  username: string = "";
+  password: string = "";
+  errorMessage: string="";
+  isSignUp: boolean = false;
+  signupUsername: string ="";
+  signupPassword: string="";
+  isVerificationCode: boolean = false;
+  verificationCode: string = "";
+  constructor(private router: Router) {
     this.user = {} as IUser;
-    // this.getSecret(); 
-  }
-  ngOnInit(){
-    Auth.currentAuthenticatedUser()
-    .then((user) => {
-      this.router.navigateByUrl('/home');
-    });
-  }
-
-  fetchData(){
-    let userEmail;
-    Auth.currentAuthenticatedUser()
-      .then((user) => {
-        userEmail = user.attributes.email;
-        console.log(this.api_gateway)
-        const apiUrl = 'https://'+this.api_gateway+'.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';
-        console.log(apiUrl);
-        const body = {
-          email: userEmail,
-          type: 'decrypt'
-        };
-        this.http.post(apiUrl, body).subscribe(
-          (response) => {
-            console.log('API Response:', response);
-            this.jsonData = response; 
-            // Add any further actions you want to perform after a successful API call.
-          },
-          (error) => {
-            console.error('API Error:', error);
-            // Handle errors or display error messages.
-          }
-        );
-      })
-      .catch((err) => {
-        console.error('Error getting authenticated user:', err);
-      });
-    }
-  
-  async getSecret(): Promise<void> {
-    try {
-      const secretName = 'PasswordsUserPoolID';
-      const secretResponse = await this.awsSecretsService.getSecretValue(secretName);
-      this.api_gateway = secretResponse.SecretString;
-    } catch (error) {
-      console.error('Error fetching secret:', error);
-    }
-  }
-
-
-  submitForm() {
-    let userEmail;
-    
-    Auth.currentAuthenticatedUser()
-    .then((user) => {
-      console.log(user)
-       userEmail = user.attributes.email;
-       const apiUrl = 'https://dmzs517vpa.execute-api.us-east-1.amazonaws.com/default/PerformEncryption';
-       const body = {
-           email:userEmail,
-           platform:this.formData.platform,
-           username:this.formData.username,
-           password:this.formData.password,
-           type:"encrypt"
-       }
-       // Send the form data to the API using POST method
-       this.http.post(apiUrl, body).subscribe(
-         (response) => {
-           console.log('API Response:', response);
-           this.successMessage="Your Credentials are secured!"
-           // Add any further actions you want to perform after a successful API call.
-         },
-         (error) => {
-           console.error('API Error:', error);
-           // Handle errors or display error messages.
-         }
-       );
-       
+}
+toggleSignUp() {
+  this.isSignUp = !this.isSignUp;
+}
+onSignUp() {
+  Auth.signUp({
+    username: this.signupUsername,
+    password: this.signupPassword,
+  })
+    .then((data) => {
+      this.isVerificationCode = true;
+      this.errorMessage = '';
     })
-   
+    .catch((error) => {
+      this.errorMessage = error.message || 'An error occurred during sign up.';
+    });
+}
+onVerify() {
+  Auth.confirmSignUp(this.signupUsername, this.verificationCode)
+    .then(() => {
+      this.isSignUp = false;
+      this.isVerificationCode = false;
+      this.errorMessage = '';
+    })
+    .catch((error) => {
+      this.errorMessage = error.message || 'An error occurred during verification.';
+    });
+}
+  onLogin() {
+    Auth.signIn(this.username, this.password)
+      .then(() => {
+        // Login successful, redirect to the protected page or do any other actions
+        // For example, you can navigate to a different route:
+        this.router.navigate(['/home']);
+      })
+      .catch((error) => {
+        this.errorMessage = error.message || 'An error occurred during login.';
+      });
   }
-
-  revealPassword(item: any) {
-    item.revealPassword = !item.revealPassword;
-  }
+ 
 
 
 }
