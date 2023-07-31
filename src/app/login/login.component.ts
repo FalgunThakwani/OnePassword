@@ -34,6 +34,7 @@ onSignUp() {
       this.errorMessage = '';
     })
     .catch((error) => {
+      console.log(error);
       this.errorMessage = error.message || 'An error occurred during sign up.';
     });
 }
@@ -45,6 +46,7 @@ onVerify() {
       this.errorMessage = '';
     })
     .catch((error) => {
+      console.log(error);
       this.errorMessage = error.message || 'An error occurred during verification.';
     });
 }

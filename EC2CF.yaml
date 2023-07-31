@@ -1,5 +1,310 @@
 AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  PasswordsTest:
+    Description: Name of Table 1
+    Type: String
+    Default: PasswordsTest
 Resources:
+  GetTestAPILambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: "TestAPI"
+      Runtime: "nodejs14.x"
+      Handler: "index.handler"
+      Role: "arn:aws:iam::091737582856:role/LabRole"
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+
+          const dynamo = new AWS.DynamoDB.DocumentClient();
+
+          const crypto = require('crypto');
+
+          const uuidv4  = require('crypto');
+
+          const tableName = 'PasswordsTest';
+
+
+          exports.handler = async (event, context) => {
+            
+            let body ;
+              const headers = {
+                  'Access-Control-Allow-Origin': '*',
+                  'Access-Control-Allow-Headers': 'Content-Type',
+                  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
+                  'Content-Type': 'application/json',
+                };
+            try {
+    
+          console.log(event);
+    
+          const { email,platform, username, password, type } = event;
+          
+          console.log('Original Password:', password);
+    
+            if(type==="encrypt"){
+              const hashedEncryptionKey = generateEncryptionKey(platform, username);
+              await storeEncryptionKey(platform,username,hashedEncryptionKey);
+              const iv = generateInitializationVector();
+              const encryptedPassword = encryptPassword(password, hashedEncryptionKey, iv);
+              await storeUserDetails(email,username, platform, iv, encryptedPassword);
+              console.log('Encrypted Password:', encryptedPassword);
+              body = JSON.stringify({ message: "success"});
+              }else if(type==="decrypt"){
+    
+              const userDetailsList = await getUserDetails(email);
+              const decryptedUserDetailsList = [];
+      
+              for (const userDetails of userDetailsList) {
+                console.log(userDetails);
+              
+                
+                const hashedEncryptionKey = await getEncryptionKeyFromSecretManager(
+                  userDetails.platform,
+                  userDetails.username
+                );
+                console.log(hashedEncryptionKey);
+              
+                
+                const decryptedPassword = decryptPassword(
+                  userDetails.encryptedPassword,
+                  hashedEncryptionKey,
+                  userDetails.iv
+                );
+                console.log('Decrypted Password:', decryptedPassword);
+              
+               
+                const decryptedUserDetails = {
+                  email: userDetails.email,
+                  username: userDetails.username,
+                  id: userDetails.id,
+                  platform:userDetails.platform,
+                  password: decryptedPassword,
+                };
+              
+                decryptedUserDetailsList.push(decryptedUserDetails);
+              }
+
+
+              body = JSON.stringify(decryptedUserDetailsList);
+
+            }
+            
+            return {
+              statusCode: 200,
+              body: body,
+              headers: headers
+            };
+           } catch (error) {
+            console.error('Error:', error);
+                return {
+                  statusCode: 500,
+                  body: JSON.stringify({ error: 'An error occurred during encryption and storage.' }),
+                  headers:headers
+                };
+              }
+            };
+
+            function generateUUIDv4() {
+              return crypto.randomBytes(16).toString('hex');
+            }
+
+            async function storeUserDetails(email, username, platform, iv, encryptedPassword) {
+              const uuid = generateUUIDv4();
+              const params = {
+                TableName: tableName,
+                Item: {
+                  id:uuid,
+                  email: email,
+                  username: username,
+                  platform: platform,
+                  iv: iv.toString('base64'), // Convert the IV to a base64 string for storage
+                  encryptedPassword: encryptedPassword,
+                },
+              };
+
+              await dynamo.put(params).promise();
+            }
+
+            async function storeEncryptionKey(platform, username, encryptionKey) {
+              const secretName = `${platform}-${username}`;
+
+              const secretManager = new AWS.SecretsManager();
+              await secretManager
+                .createSecret({
+                  Name: secretName,
+                  SecretString: encryptionKey,
+                })
+                .promise();
+            }
+
+            function generateEncryptionKey(platform, username) {
+              const randomBytes = crypto.randomBytes(16);
+              return randomBytes.toString('hex');
+            }
+
+            function generateInitializationVector() {
+              return crypto.randomBytes(16);
+            }
+
+            function encryptPassword(password, encryptionKey, iv) {
+              const algorithm = 'aes-256-ctr';
+
+              const cipher = crypto.createCipheriv(algorithm, encryptionKey, iv);
+              let encryptedPassword = cipher.update(password, 'utf8', 'hex');
+              encryptedPassword += cipher.final('hex');
+              return encryptedPassword;
+            }
+
+            function decryptPassword(encryptedPassword, encryptionKey, ivBase64) {
+              const algorithm = 'aes-256-ctr';
+              const iv = Buffer.from(ivBase64, 'base64');
+              const decipher = crypto.createDecipheriv(algorithm, encryptionKey, iv);
+              let decryptedPassword = decipher.update(encryptedPassword, 'hex', 'utf8');
+              decryptedPassword += decipher.final('utf8');
+
+              return decryptedPassword;
+            }
+
+            async function getEncryptionKeyFromSecretManager(platform, username) {
+              const secretName = `${platform}-${username}`;
+
+              const secretManager = new AWS.SecretsManager();
+              const secretData = await secretManager.getSecretValue({ SecretId: secretName }).promise();
+
+              return secretData.SecretString;
+            }
+
+            async function getUserDetails(email) {
+              const params = {
+                TableName: tableName,
+                FilterExpression: "email = :email",
+                ExpressionAttributeValues: {
+                  ":email": email,
+                },
+              };
+
+              const result = await dynamo.scan(params).promise();
+
+              // If there's only one record expected for the given email, you can return the first item.
+              // Otherwise, you may need to handle multiple items based on your specific use case.
+              return result.Items;
+            }
+  TestAPI:
+    Type: "AWS::ApiGateway::RestApi"
+    Properties:
+      Name: Passwords
+    DependsOn:
+      - GetTestAPILambda
+  GetTestAPILambdaResource:
+    Type: "AWS::ApiGateway::Resource"
+    Properties:
+      RestApiId: !Ref TestAPI
+      ParentId: !GetAtt
+        - TestAPI
+        - RootResourceId
+      PathPart: score
+    DependsOn:
+      - TestAPI
+  MyApiGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref TestAPI
+      ResourceId: !Ref GetTestAPILambdaResource
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              "method.response.header.Access-Control-Allow-Methods": "'GET,POST,PUT,DELETE'"
+              "method.response.header.Access-Control-Allow-Origin": "'*'"
+            ResponseTemplates:
+              "application/json": ""
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          "application/json": '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Headers": true
+            "method.response.header.Access-Control-Allow-Methods": true
+            "method.response.header.Access-Control-Allow-Origin": true
+          ResponseModels:
+            "application/json": "Empty"
+  GetTestAPILambdaMethod:
+    Type: "AWS::ApiGateway::Method"
+    Properties:
+      RestApiId: !Ref TestAPI
+      ResourceId: !Ref GetTestAPILambdaResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - >-
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFuncNameArn}/invocations
+          - LambdaFuncNameArn: !GetAtt GetTestAPILambda.Arn
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseTemplates:
+              application/json: $input.json('$')
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        RequestTemplates:
+          application/json: $input.json('$')
+      RequestParameters:
+        method.request.querystring.name: false
+      MethodResponses:
+        - ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+            method.response.header.Access-Control-Allow-Origin: true
+          StatusCode: "200"
+    DependsOn:
+      - GetTestAPILambdaResource
+  GetTestAPIDeployment:
+    Type: "AWS::ApiGateway::Deployment"
+    Properties:
+      RestApiId: !Ref TestAPI
+      StageName: Production
+    DependsOn:
+      - GetTestAPILambdaMethod
+  APIGatewayPermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !GetAtt GetTestAPILambda.Arn
+      Principal: apigateway.amazonaws.com
+    DependsOn:
+      - GetTestAPIDeployment
+  PasswordsTestTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName:
+        Ref: PasswordsTest
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+  MySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: APIGateway
+      Description: api gateway url
+      SecretString: !Ref TestAPI
+    DependsOn:
+      - TestAPI
   PasswordsUserPool:
     Type: "AWS::Cognito::UserPool"
     Properties:
@@ -55,3 +360,50 @@ Resources:
       SecretString: !Ref PasswordsUserPoolClient
     DependsOn:
       - PasswordsUserPool
+  Server:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.large
+      ImageId: ami-0f34c5ae932e6f0e4
+      KeyName: "cloud-vpc"
+      SecurityGroups:
+      - Ref: InstanceSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo yum update -y
+          sudo yum install -y git
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          . ~/.nvm/nvm.sh
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install 16
+          git clone https://github.com/FalgunThakwani/OnePassword.git
+          cd OnePassword
+          npm install
+          npm start
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH HTTP and HTTPS access via port 22,80,443,3000,3389
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 4200
+          ToPort: 4200
+          CidrIp: 0.0.0.0/0
